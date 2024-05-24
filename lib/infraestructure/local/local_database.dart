@@ -66,12 +66,11 @@ class DatabaseHelper {
   }
 
   // Update
-  Future<int> update(Map<String, dynamic> row) async {
-    Database db = await instance.database;
-    String uuid = row[columnUuid];
-    return await db
-        .update(table, row, where: '$columnUuid = ?', whereArgs: [uuid]);
-  }
+Future<int> update(String uuid, Map<String, dynamic> row) async {
+  Database db = await instance.database;
+  return await db.update(table, row, where: '$columnUuid = ?', whereArgs: [uuid]);
+}
+
 
   // Delete
   Future<int> delete(String uuid) async {

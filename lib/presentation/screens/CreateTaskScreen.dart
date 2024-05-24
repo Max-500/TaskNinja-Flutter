@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:task_ninja_flutter/domain/entities/tasks.dart';
 import 'package:task_ninja_flutter/domain/repositories/tasks_repository.dart';
+import 'package:task_ninja_flutter/infraestructure/local/local_database.dart';
+import 'package:task_ninja_flutter/infraestructure/services/connection.dart';
 import 'package:task_ninja_flutter/presentation/widgets/appbar.dart';
+import 'package:uuid/uuid.dart';
 
-class CreateTaskScreen extends StatelessWidget {
+class CreateTaskScreen extends ConsumerWidget {
   final TasksRepository tasksRepository;
 
   final titleController = TextEditingController();
@@ -17,7 +21,7 @@ class CreateTaskScreen extends StatelessWidget {
   CreateTaskScreen({super.key, required this.tasksRepository});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(kToolbarHeight),
@@ -54,19 +58,38 @@ class CreateTaskScreen extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () async {
-                final Task newTask = Task(
-                  uuid: '',
-                  title: titleController.text,
-                  description: descriptionController.text,
-                  state: stateController.text,
-                  priority: priorityController.text,
-                  notificationTime: notificationTimeController.text,
-                  userUUID: userUUIDController.text,
-                );
-                // Aquí puedes manejar la creación de la
+                if (ref.watch(isConnectedProvider)) {
+                  final Task newTask = Task(
+                    uuid: '',
+                    title: titleController.text,
+                    description: descriptionController.text,
+                    state: stateController.text,
+                    priority: priorityController.text,
+                    notificationTime: notificationTimeController.text,
+                    userUUID: userUUIDController.text,
+                  );
+                  // Aquí puedes manejar la creación de la
 
-                await tasksRepository.createTask(newTask);
+                  await tasksRepository.createTask(newTask);
+                }
                 // ignore: use_build_context_synchronously
+                var uuid = const Uuid();
+                String v4uuid = uuid.v4();
+
+                final dbHelper = DatabaseHelper.instance;
+                Map<String, dynamic> row = {
+                  DatabaseHelper.columnUuid: v4uuid,
+                  DatabaseHelper.columnTitle: titleController.text,
+                  DatabaseHelper.columnDescription: descriptionController.text,
+                  DatabaseHelper.columnState: stateController.text,
+                  DatabaseHelper.columnPriority: priorityController.text,
+                  DatabaseHelper.columnNotificationTime:
+                      '2024-05-22T22:00:00.000Z',
+                  DatabaseHelper.columnUserUUID: '080d6452-4cd6-475d-aac7-3040869da155',
+                  DatabaseHelper.columnIsSynced:
+                      0, // 0 significa no sincronizado
+                };
+                await dbHelper.insert(row);
                 context.go('/');
               },
               child: const Text('Crear tarea'),

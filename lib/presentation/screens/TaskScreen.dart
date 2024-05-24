@@ -160,10 +160,37 @@ class TaskScreen extends ConsumerWidget {
                     children: <Widget>[
                       ElevatedButton(
                         onPressed: () async {
-                          final Task task = Task(uuid: uuid, title: titleController.text, description: descriptionController.text, 
-                            state: stateController.text, priority: priorityController.text, notificationTime: '', userUUID: 'userUUID');
-                            await tasksRepository.updateTask(uuid, task);
-                            context.go('/');
+                          if (ref.watch(isConnectedProvider)) {
+                                    final Task task = Task(
+                                        uuid: uuid,
+                                        title: titleController.text,
+                                        description: descriptionController.text,
+                                        state: stateController.text,
+                                        priority: priorityController.text,
+                                        notificationTime: '',
+                                        userUUID: 'userUUID');
+                                    await tasksRepository.updateTask(
+                                        uuid, task);
+                                      context.go('/');
+
+                                        return;
+                                  }
+                                  print("Actualiza sin intetr");
+                                  Map<String, dynamic> row = {
+                                    DatabaseHelper.columnTitle: titleController.text,
+                                    DatabaseHelper.columnDescription:
+                                        descriptionController.text,
+                                    DatabaseHelper.columnState: stateController.text,
+                                    DatabaseHelper.columnPriority:
+                                        priorityController.text,
+                                  };
+
+                                  // Actualiza la tarea en la 
+                                  //
+                                  // de datos
+                                  await dbHelper.update(uuid, row);
+
+                                  context.go('/');
                         },
                         child: const Text('Actualizar'),
                       ),
